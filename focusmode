@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# @author Sai Pramod 
+
+# Default arg state
+status=null
+enable=null
+
+# Message strings
+usage="usage: $0 [-e | --enable | -d | --disable] [--status | -s] [--help]"
+rooterrormsg="FATAL: This script must be run as root to modify the system host file"
+
+# Parse arguments
+for var in "$@"
+do
+    if [ "$var" == "-e" ] || [ "$var" == "--enable" ] 
+    then
+        enable=true
+    elif [ "$var" == "-d" ] || [ "$var" == "--disable" ] 
+    then
+        enable=false
+    elif [ "$var" == "-s" ] || [ "$var" == "--status" ]
+    then
+        status=true
+    else
+        echo $usage
+        exit 0
+    fi
+done
+
+# Argument sanity check
+if [ "$status" == "null" ] && [ "$enable" == "null" ]
+then
+    echo $usage
+    exit 1
+fi
+
+#if test -d $HOME/.focusmode
+#then
+    # TODO if not exists hosts/hosts.focus, create those files
+#    :
+#fi # TODO else create and populate directory
+
+
+if [ "$status" == "true" ]
+then
+    #TODO implement status condition
+    cat /etc/hosts
+elif [ "$enable" == "true" ]
+then
+    if ! [ $(id -u) = 0 ]
+    then
+        echo $rooterrormsg
+        exit 1
+    fi
+    cp $HOME/.focusmode/hosts.focus /etc/hosts
+    if [ $? -eq 1 ]
+    then
+        exit 1
+    fi
+	systemd-resolve --flush-caches
+else
+    if ! [ $(id -u) = 0 ]
+    then
+        echo $rooterrormsg
+        exit 1
+    fi
+    cp $HOME/.focusmode/hosts /etc/hosts
+    if [ $? -eq 1 ]
+    then
+        exit 1
+    fi
+	systemd-resolve --flush-caches
+fi
